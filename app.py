@@ -1,13 +1,21 @@
 import os
+import json
 from flask import Flask
 from firebase_admin import credentials, initialize_app, firestore
 
-# Si vas a usar un archivo JSON de credenciales (recomendado para producción fuera de Google Cloud):
-# cred = credentials.Certificate("serviceAccountKey.json")
-# initialize_app(cred)
+# Cargamos las credenciales desde la variable de entorno de Render
+firebase_json_env = os.environ.get("FIREBASE_CREDENTIALS_JSON")
 
-# O si prefieres que use las credenciales por defecto (si configuras la variable de entorno en Render):
-initialize_app()
+if firebase_json_env:
+    # Si estamos en Render y existe la variable, la convertimos a diccionario e inicializamos
+    cred_dict = json.loads(firebase_json_env)
+    cred = credentials.Certificate(cred_dict)
+    initialize_app(cred)
+else:
+    # Por si acaso lo pruebas local con tu archivo JSON físico
+    cred = credentials.Certificate("serviceAccountKey.json")
+    initialize_app(cred)
+
 db = firestore.client()
 
 app = Flask(__name__)
